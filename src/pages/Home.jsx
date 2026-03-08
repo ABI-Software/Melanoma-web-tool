@@ -6,12 +6,12 @@ import BubbleChartIcon from "@mui/icons-material/BubbleChart";
 
 const previousPapers = [
   {
-    title: "Paper title 1",
+    title: "Paper title 1 Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
     venue: "Journal / Conference, 2022",
     url: "https://doi.org/xx.xxxx/xxxxx"
   },
   {
-    title: "Paper title 2",
+    title: "Paper title 2 Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
     venue: "Journal / Conference, 2020",
     url: "https://pubmed.ncbi.nlm.nih.gov/xxxxxxxx/"
   },
@@ -21,14 +21,17 @@ export default function Home() {
   return (
     <Box sx={{ px: { xs: 2, md: 5 }, pb: 6 }}>
       {/* Title */}
-      <Stack 
-      spacing={1.25} 
-      sx={{ maxWidth: 940, mx: "auto", textAlign: "center", mt: { xs: 4, sm: 5, md: 6 } }}
+      <Stack
+        spacing={1.25}
+        sx={{
+          textAlign: "left",
+          mt: { xs: 4, sm: 5, md: 6 },
+        }}
       >
-        <Typography variant="h1" gutterBottom>
+        <Typography variant="h1" gutterBottom align="left">
           Melanoma Lymphatic Pathways
         </Typography>
-        <Typography color="text.secondary">
+        <Typography color="text.secondary" align="left">
           SUB TITLE Lorem ipsum dolor sit amet, consectetur adipiscing elit.
         </Typography>
       </Stack>
@@ -38,7 +41,6 @@ export default function Home() {
         <Grid
           container
           spacing={{ xs: 3, md: 6 }}
-          sx={{ maxWidth: 1400, mx: "auto" }}
           alignItems="start"
         >
           {/* Left: description */}
@@ -93,7 +95,7 @@ export default function Home() {
               imageSrc={`${import.meta.env.BASE_URL}images/tool2preview.png`}
               imageAlt="Heatmaps Tool preview"
               title="Heatmaps Tool"
-              body="Duis sagittis ipsum. Praesent mauris. Fusce nec tellus sed augue semper porta."
+              body="Lorem ipsum dolor sit amet, consectetur adipiscing elit. Integer nec odio. Praesent libero."
               ctaLabel="Open Heatmaps Tool"
               to="/tool2"
             />
@@ -103,9 +105,11 @@ export default function Home() {
 
       {/* Previous Research */}
       <Box sx={{ mt: 6 }}>
-        <Stack spacing={1} sx={{ maxWidth: 1400, mx: "auto", textAlign: "center" }}>
-          <Typography variant="h2">Previous Research</Typography>
-          <Typography color="text.secondary">
+        <Stack spacing={1} sx={{ textAlign: "left" }}>
+          <Typography variant="h2" align="left">
+            Previous Research
+          </Typography>
+          <Typography color="text.secondary" align="left">
             Links to prior work and papers that underpin this project.
           </Typography>
 
@@ -123,7 +127,7 @@ export default function Home() {
                   flexDirection: { xs: "column", sm: "row" },
                 }}
               >
-                <Box>
+                <Box sx={{ textAlign: "left" }}>
                   <Typography sx={{ fontWeight: 800 }}>{p.title}</Typography>
                   <Typography variant="body2" color="text.secondary">
                     {p.venue}
@@ -164,7 +168,7 @@ function ToolBlock({ icon, imageSrc, imageAlt, title, body, ctaLabel, to }) {
         alt={imageAlt}
         sx={{
           width: "100%",
-          maxWidth: 520,
+          maxWidth: 420,
           aspectRatio: "3 / 4",
           objectFit: "cover",
           borderRadius: 3,

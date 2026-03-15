@@ -22,6 +22,7 @@ export default function SharedBodyViewer({
 
     const engine = new SharedBodyEngine({
       host,
+      initialTool: activeTool,
       onSkinRowsChange,
       onHeatmapMetaReady,
     });

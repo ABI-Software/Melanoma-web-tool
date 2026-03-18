@@ -10,6 +10,10 @@ export class AnatomyShellLayer {
     this.lines = null;
     this.selectable = [];
     this._baseMeshOpacity = 0.5;
+
+    this.selectedMesh = null;
+    this.hoveredMesh = null;
+    this.selectionVisualEnabled = true;
   }
 
   async init() {
@@ -47,6 +51,9 @@ export class AnatomyShellLayer {
           transparent: true,
           shininess: 20,
           side: THREE.DoubleSide,
+          polygonOffset: true,
+          polygonOffsetFactor: 5,
+          polygonOffsetUnits: 5,
         });
 
         child.renderOrder = 1;
@@ -84,24 +91,42 @@ export class AnatomyShellLayer {
     const isSkinMode = mode === "skin";
     const isHeatmapMode = mode === "heatmap";
 
+    // Show red selected highlight only in skin tool
+    this.selectionVisualEnabled = isSkinMode;
+
     for (const mesh of this.selectable) {
       mesh.visible = true;
 
-      if (mesh.material?.color) {
-        mesh.material.color.set("#E5B27F");
-      }
-
       if (mesh.material) {
         mesh.material.transparent = true;
-        mesh.material.opacity = isSkinMode ? 0.5 : 0.01;
+        mesh.material.opacity = isSkinMode ? this._baseMeshOpacity : 0.01;
         mesh.material.depthWrite = !isHeatmapMode;
       }
 
-      if (mesh.material?.emissive) {
+      if (mesh !== this.selectedMesh && mesh.material?.color) {
+        mesh.material.color.set("#E5B27F");
+      }
+
+      if (mesh !== this.selectedMesh && mesh.material?.emissive) {
         mesh.material.emissive.setHex(0x000000);
       }
 
       mesh.renderOrder = isHeatmapMode ? 5 : 1;
+    }
+
+    if (this.selectedMesh?.material) {
+      if (this.selectionVisualEnabled && this.selectedMesh.material.color) {
+        this.selectedMesh.material.color.setHex(0xff0000);
+      } else if (this.selectedMesh.material.color) {
+        // Keep selection internally in heatmap mode, but do not show red highlight
+        this.selectedMesh.material.color.set("#E5B27F");
+      }
+
+      this.selectedMesh.material.opacity = isSkinMode ? this._baseMeshOpacity : 0.01;
+
+      if (this.selectedMesh.material.emissive) {
+        this.selectedMesh.material.emissive.setHex(0x000000);
+      }
     }
 
     if (this.lines) {
@@ -112,20 +137,68 @@ export class AnatomyShellLayer {
     }
   }
 
-  clearSelection() {
-    for (const mesh of this.selectable) {
-      if (mesh.material?.color) {
-        mesh.material.color.set("#E5B27F");
-      }
+  hasSelection() {
+    return Boolean(this.selectedMesh);
+  }
 
-      if (mesh.material) {
-        mesh.material.opacity = this._baseMeshOpacity;
-      }
+  getSelectedMesh() {
+    return this.selectedMesh;
+  }
 
-      if (mesh.material?.emissive) {
-        mesh.material.emissive.setHex(0x000000);
-      }
+  selectMesh(mesh) {
+    if (this.selectedMesh === mesh) return;
+
+    if (this.selectedMesh?.material?.color) {
+      this.selectedMesh.material.color.set("#E5B27F");
+      this.selectedMesh.material.opacity = this._baseMeshOpacity;
     }
+    if (this.selectedMesh?.material?.emissive) {
+      this.selectedMesh.material.emissive.setHex(0x000000);
+    }
+
+    this.selectedMesh = mesh ?? null;
+
+    if (this.selectedMesh?.material?.color) {
+      if (this.selectionVisualEnabled) {
+        this.selectedMesh.material.color.setHex(0xff0000);
+      } else {
+        this.selectedMesh.material.color.set("#E5B27F");
+      }
+
+      this.selectedMesh.material.opacity = this._baseMeshOpacity;
+    }
+  }
+
+  clearSelection() {
+    if (this.selectedMesh?.material?.color) {
+      this.selectedMesh.material.color.set("#E5B27F");
+      this.selectedMesh.material.opacity = this._baseMeshOpacity;
+    }
+
+    if (this.selectedMesh?.material?.emissive) {
+      this.selectedMesh.material.emissive.setHex(0x000000);
+    }
+
+    this.selectedMesh = null;
+  }
+
+  getSelectedFocusInfo() {
+    if (!this.selectedMesh?.geometry) return null;
+
+    const center = this.getCenterPoint(this.selectedMesh);
+    if (!center) return null;
+
+    this.selectedMesh.geometry.computeBoundingSphere();
+    const localRadius = this.selectedMesh.geometry.boundingSphere?.radius ?? 60;
+
+    const scale = this.selectedMesh.getWorldScale(new THREE.Vector3());
+    const maxScale = Math.max(scale.x, scale.y, scale.z, 1);
+    const worldRadius = localRadius * maxScale;
+
+    return {
+      point: center.clone(),
+      radius: worldRadius,
+    };
   }
 
   getCenterPoint(mesh) {
@@ -146,8 +219,13 @@ export class AnatomyShellLayer {
   }
 
   dispose() {
+    if (!this.root) return;
+
+    this.scene?.remove(this.root);
     this.root = null;
     this.lines = null;
     this.selectable = [];
+    this.selectedMesh = null;
+    this.hoveredMesh = null;
   }
 }

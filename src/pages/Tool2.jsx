@@ -429,7 +429,7 @@ function SidebarContent({
           flexWrap="wrap"
         >
           <Typography sx={{ fontWeight: 700 }}>
-            Display:
+            Display Melanoma Sites:
           </Typography>
 
           <FormControlLabel
@@ -439,7 +439,7 @@ function SidebarContent({
                 onChange={handleToggleMelanomaSites}
               />
             }
-            label="Melanoma sites"
+            label="Locations"
             sx={{ m: 0 }}
           />
 

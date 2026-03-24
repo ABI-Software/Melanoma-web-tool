@@ -3,7 +3,10 @@ import AddOutlinedIcon from "@mui/icons-material/AddOutlined";
 import RemoveOutlinedIcon from "@mui/icons-material/RemoveOutlined";
 import ReplayOutlinedIcon from "@mui/icons-material/ReplayOutlined";
 
-// Same specifications as ViewControls for consistency.
+/**
+ * Shared styling for the FAB container.
+ * Matches the visual treatment used by the view controls for consistency.
+ */
 const pillFabSx = {
   borderRadius: 999,
   boxShadow: "none",
@@ -18,6 +21,9 @@ const pillFabSx = {
   "&:hover": { bgcolor: "background.paper" },
 };
 
+/**
+ * Shared styling for each icon button inside the canvas controls.
+ */
 const iconBtnSx = {
   width: 32,
   height: 32,
@@ -26,6 +32,16 @@ const iconBtnSx = {
   "&:hover": { bgcolor: "action.hover" },
 };
 
+/**
+ * Floating canvas control group for zooming and resetting the 3D view.
+ *
+ * @param {Object} props Component props.
+ * @param {() => void} props.onZoomIn Callback fired when the zoom-in button is clicked.
+ * @param {() => void} props.onZoomOut Callback fired when the zoom-out button is clicked.
+ * @param {() => void} props.onReset Callback fired when the reset-view button is clicked.
+ * @param {import("@mui/material").SxProps} [props.sx] Optional additional MUI sx styles for the wrapper.
+ * @returns {JSX.Element} The rendered canvas controls.
+ */
 export default function CanvasControls({ onZoomIn, onZoomOut, onReset, sx }) {
   const safeTop = "calc(env(safe-area-inset-top, 0px) + 12px)";
   const safeRight = "calc(env(safe-area-inset-right, 0px) + 12px)";

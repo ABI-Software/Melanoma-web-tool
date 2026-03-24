@@ -4,6 +4,10 @@ import { Link as RouterLink } from "react-router-dom";
 import PercentIcon from "@mui/icons-material/Percent";
 import BubbleChartIcon from "@mui/icons-material/BubbleChart";
 
+/**
+ * Placeholder research links shown in the Previous Research section.
+ * Replace these entries with the final paper.
+ */
 const previousPapers = [
   {
     title: "Paper title 1 Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
@@ -17,6 +21,13 @@ const previousPapers = [
   },
 ];
 
+/**
+ * Landing page for the melanoma lymphatic pathways web tool.
+ * It introduces the project, highlights the two core tools,
+ * and lists supporting prior research links.
+ *
+ * @returns {JSX.Element} The rendered home page.
+ */
 export default function Home() {
   return (
     <Box sx={{ px: { xs: 2, md: 5 }, pb: 6 }}>
@@ -36,7 +47,7 @@ export default function Home() {
         </Typography>
       </Stack>
 
-      {/* 3 column row */}
+      {/* Main content row with project description and entry points to both tools. */}
       <Box sx={{ mt: 6 }}>
         <Grid
           container
@@ -103,7 +114,7 @@ export default function Home() {
         </Grid>
       </Box>
 
-      {/* Previous Research */}
+      {/* Supporting literature section with external links to prior work. */}
       <Box sx={{ mt: 6 }}>
         <Stack spacing={1} sx={{ textAlign: "left" }}>
           <Typography variant="h2" align="left">
@@ -159,9 +170,22 @@ export default function Home() {
   );
 }
 
+/**
+ * Reusable content block used to present a tool preview on the home page.
+ *
+ * @param {Object} props Component props.
+ * @param {JSX.Element} props.icon Icon displayed above the tool title.
+ * @param {string} props.imageSrc Preview image source.
+ * @param {string} props.imageAlt Alternative text for the preview image.
+ * @param {string} props.title Tool title.
+ * @param {string} props.body Short descriptive text for the tool.
+ * @param {string} props.to Route path opened when the CTA button is clicked.
+ * @returns {JSX.Element} The rendered tool preview block.
+ */
 function ToolBlock({ icon, imageSrc, imageAlt, title, body, ctaLabel, to }) {
   return (
     <Stack spacing={1.5} sx={{ textAlign: "center", alignItems: "center" }}>
+      {/* Static preview image used to visually introduce the tool before navigation. */}
       <Box
         component="img"
         src={imageSrc}
@@ -184,6 +208,7 @@ function ToolBlock({ icon, imageSrc, imageAlt, title, body, ctaLabel, to }) {
         {body}
       </Typography>
 
+      {/* Primary navigation action that takes the user directly into the selected tool. */}
       <Button
         component={RouterLink}
         to={to}

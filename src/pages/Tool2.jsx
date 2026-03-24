@@ -23,16 +23,30 @@ import KeyboardArrowUpIcon from "@mui/icons-material/KeyboardArrowUp";
 import TableChartOutlinedIcon from "@mui/icons-material/TableChartOutlined";
 import { useOutletContext } from "react-router-dom";
 
+/**
+ * Top offset that respects device safe areas for floating mobile controls.
+ */
 const safeTop = "calc(env(safe-area-inset-top, 0px) + 12px)";
 
+/**
+ * Page level sidebar content for the heatmaps workflow.
+ * On desktop it renders as the fixed side panel content, while on mobile
+ * it is exposed through a floating action button and bottom drawer.
+ *
+ * @returns {JSX.Element} The rendered Tool 2 sidebar experience.
+ */
 export default function Tool2() {
+  // Read the responsive layout flag and heatmap state from the outlet context.
   const { isMdUp, heatmapState, setHeatmapState } = useOutletContext();
 
+  // Controls the mobile bottom drawer visibility.
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
+  // Shared usage instructions shown in the tool information panel.
   const controlsText =
     "Controls: left mouse button to rotate, right mouse button to pan. Mouse wheel to zoom. Double click to focus. Control panel located on top left.";
 
+  // Extract the currently selected region, display mode, and available regions.
   const {
     region,
     pointDisplayMode,
@@ -40,6 +54,10 @@ export default function Tool2() {
     defaultRegion,
   } = heatmapState;
 
+  /**
+   * Ensures the selected region always stays valid once region metadata loads
+   * or changes, falling back to the default or first available region.
+   */
   useEffect(() => {
     if (regions.length === 0) return;
 
@@ -51,6 +69,11 @@ export default function Tool2() {
     }
   }, [regions, defaultRegion, region, setHeatmapState]);
 
+  /**
+   * Updates the currently selected heatmap region.
+   *
+   * @param {string} value Region identifier to display.
+   */
   const setRegion = (value) => {
     setHeatmapState((prev) => ({
       ...prev,
@@ -58,6 +81,11 @@ export default function Tool2() {
     }));
   };
 
+  /**
+   * Updates which optional point overlay is shown on top of the heatmap.
+   *
+   * @param {string} value Point display mode to apply.
+   */
   const setPointDisplayMode = (value) => {
     setHeatmapState((prev) => ({
       ...prev,
@@ -68,14 +96,20 @@ export default function Tool2() {
   const melanomaSitesChecked = pointDisplayMode === "sites";
   const normalisedChecked = pointDisplayMode === "normalised";
 
+  // Toggle the melanoma site markers, turning them off if already enabled.
   const handleToggleMelanomaSites = () => {
     setPointDisplayMode(melanomaSitesChecked ? "none" : "sites");
   };
 
+  // Toggle the normalised points overlay, turning it off if already enabled.
   const handleToggleNormalised = () => {
     setPointDisplayMode(normalisedChecked ? "none" : "normalised");
   };
 
+  /**
+   * Static grouped region definitions used to build the heatmap selection table.
+   * Memoised so the table structure is not recreated on every render.
+   */
   const sections = useMemo(
     () => [
       {
@@ -121,6 +155,7 @@ export default function Tool2() {
     []
   );
 
+  // Desktop layout renders the sidebar content directly inside the page column.
   if (isMdUp) {
     return (
       <Box sx={{ height: "100%", minHeight: 0, display: "flex", flexDirection: "column" }}>
@@ -139,6 +174,7 @@ export default function Tool2() {
     );
   }
 
+  // Mobile layout uses a floating trigger that opens the same content in a bottom drawer.
   return (
     <>
       <Box sx={{ position: "absolute", top: safeTop, left: 12, zIndex: 30 }}>
@@ -183,6 +219,7 @@ export default function Tool2() {
         }}
       >
         <Box sx={{ height: "100%", display: "flex", flexDirection: "column" }}>
+          {/* Small visual handle indicating that the drawer can be dragged or dismissed. */}
           <Box sx={{ p: 1, display: "flex", justifyContent: "center" }}>
             <Box
               sx={{
@@ -195,6 +232,7 @@ export default function Tool2() {
           </Box>
 
           <Box sx={{ flex: 1, minHeight: 0, overflow: "auto" }}>
+            {/* Reuse the same sidebar content component inside the mobile drawer. */}
             <SidebarContent
               sections={sections}
               controlsText={controlsText}
@@ -213,6 +251,23 @@ export default function Tool2() {
   );
 }
 
+/**
+ * Shared sidebar body used by both the desktop panel and mobile drawer.
+ * It contains the tool description, heatmap region selection tables,
+ * node field summary options, display toggles, and the mobile legend.
+ *
+ * @param {Object} props Component props.
+ * @param {Array<Object>} props.sections Grouped heatmap region definitions.
+ * @param {string} props.controlsText Instructional helper text shown in the info panel.
+ * @param {string} props.region Currently selected region.
+ * @param {(value: string) => void} props.setRegion Setter for the selected region.
+ * @param {boolean} props.melanomaSitesChecked Whether melanoma site markers are enabled.
+ * @param {boolean} props.normalisedChecked Whether normalised markers are enabled.
+ * @param {() => void} props.handleToggleMelanomaSites Toggles melanoma site markers.
+ * @param {() => void} props.handleToggleNormalised Toggles normalised markers.
+ * @param {boolean} props.isMdUp Whether the desktop layout is active.
+ * @returns {JSX.Element} The rendered shared sidebar content.
+ */
 function SidebarContent({
   sections,
   controlsText,
@@ -224,14 +279,21 @@ function SidebarContent({
   handleToggleNormalised,
   isMdUp,
 }) {
+  // Shared emphasis styling for collapsible section header rows.
   const SECTION_ROW_SX = { fontWeight: 800 };
 
+  // Tracks which region groups are currently expanded in the selection table.
   const [openSections, setOpenSections] = useState({
     "Head and Neck": false,
     "Torso and Upper Limb": false,
     "Lower Limb": false,
   });
 
+  /**
+   * Expands or collapses a section in the heatmap selection table.
+   *
+   * @param {string} key Section title to toggle.
+   */
   const toggle = (key) => {
     setOpenSections((prev) => ({
       ...prev,
@@ -239,6 +301,13 @@ function SidebarContent({
     }));
   };
 
+  /**
+   * Checks whether any row inside a section matches the current selection.
+   * Used to visually highlight the active parent section.
+   *
+   * @param {Object} sec Section definition.
+   * @returns {boolean} True when the section contains the selected region.
+   */
   const sectionHasSelected = (sec) =>
     sec.rows.some((r) =>
       r.type === "single"
@@ -248,6 +317,7 @@ function SidebarContent({
 
   return (
     <>
+      {/* Introductory card explaining the purpose of the heatmaps tool. */}
       <Paper variant="outlined" sx={{ m: 2, p: 2, borderRadius: 3 }}>
         <Typography variant="h2" sx={{ mb: 0.75 }}>
           Heatmaps Tool
@@ -260,6 +330,7 @@ function SidebarContent({
         </Typography>
       </Paper>
 
+      {/* Main control panel with region selection and node field summary tables. */}
       <Paper
         variant="outlined"
         sx={{
@@ -291,6 +362,7 @@ function SidebarContent({
             </TableHead>
 
             <TableBody>
+              {/* Collapsible grouped region rows for the selectable lymphatic regions. */}
               {sections.map((sec) => {
                 const open = Boolean(openSections[sec.title]);
                 const isSelected = sectionHasSelected(sec);
@@ -360,6 +432,7 @@ function SidebarContent({
           </Table>
         </TableContainer>
 
+        {/* Separate the detailed region table from the summary node field options. */}
         <Divider sx={{ my: 2 }} />
 
         <Typography sx={{ fontWeight: 800, mb: 1 }}>
@@ -421,6 +494,7 @@ function SidebarContent({
         </Table>
       </Paper>
 
+      {/* Display toggles for optional melanoma site and normalised overlays. */}
       <Paper variant="outlined" sx={{ m: 2, p: 2, borderRadius: 3 }}>
         <Stack
           direction="row"
@@ -456,6 +530,7 @@ function SidebarContent({
         </Stack>
       </Paper>
 
+      {/* On mobile show the colour legend inside the drawer for quick reference. */}
       {!isMdUp && (
         <Paper variant="outlined" sx={{ m: 2, p: 2, borderRadius: 3 }}>
           <HeatmapLegend compact />
@@ -465,6 +540,17 @@ function SidebarContent({
   );
 }
 
+/**
+ * Renders a selectable left/right heatmap row.
+ *
+ * @param {Object} props Component props.
+ * @param {string} props.label Display label for the region row.
+ * @param {string} props.left Region key for the left side option.
+ * @param {string} props.right Region key for the right side option.
+ * @param {string} props.value Currently selected region value.
+ * @param {(value: string) => void} props.onChange Callback fired when a side is selected.
+ * @returns {JSX.Element} The rendered left/right selection row.
+ */
 function HeatmapRow({ label, left, right, value, onChange }) {
   const isLeft = value === left;
   const isRight = value === right;
@@ -489,6 +575,16 @@ function HeatmapRow({ label, left, right, value, onChange }) {
   );
 }
 
+/**
+ * Renders a selectable single value heatmap row used for non left/right regions.
+ *
+ * @param {Object} props Component props.
+ * @param {string} props.label Display label for the region row.
+ * @param {string} props.valueKey Region key selected by the row.
+ * @param {string} props.value Currently selected region value.
+ * @param {(value: string) => void} props.onChange Callback fired when the row is selected.
+ * @returns {JSX.Element} The rendered single value selection row.
+ */
 function HeatmapSingleRow({ label, valueKey, value, onChange }) {
   const checked = value === valueKey;
 
@@ -505,6 +601,13 @@ function HeatmapSingleRow({ label, valueKey, value, onChange }) {
   );
 }
 
+/**
+ * Displays the drainage likelihood colour legend used by the heatmap view.
+ *
+ * @param {Object} props Component props.
+ * @param {boolean} [props.compact=false] Whether to render the slimmer legend variant.
+ * @returns {JSX.Element} The rendered heatmap legend.
+ */
 function HeatmapLegend({ compact = false }) {
   return (
     <Paper

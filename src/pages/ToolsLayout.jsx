@@ -7,32 +7,48 @@ import SharedBodyViewer from "../components/SharedBodyViewer";
 import CanvasControls from "../components/CanvasControls";
 import ViewControls from "../components/ViewControls";
 
+/** Minimum allowed width for the desktop sidebar panel. */
 const MIN_SIDEBAR_W = 290;
+/** Maximum allowed width for the desktop sidebar panel. */
 const MAX_SIDEBAR_W = 720;
+/** Default desktop sidebar width used when no saved preference exists. */
 const DEFAULT_SIDEBAR_W = 520;
 
+/**
+ * Shared page layout for both interactive tool routes.
+ * It coordinates the responsive sidebar, shared 3D viewer, floating controls,
+ * and route-specific state passed down through the outlet context.
+ *
+ * @returns {JSX.Element} The rendered tools layout.
+ */
 export default function ToolsLayout() {
   const theme = useTheme();
   const isMdUp = useMediaQuery(theme.breakpoints.up("md"));
   const location = useLocation();
 
+  // Stores the imperative viewer API exposed by the shared body viewer.
   const apiRef = useRef(null);
 
+  // Derive the currently active tool mode from the route.
   const activeTool = location.pathname.includes("/tool2") ? "heatmap" : "skin";
 
+  // Selected camera preset shared with the floating view controls.
   const [viewPreset, setViewPreset] = useState("All");
 
+  // Desktop sidebar width, restored from local storage when available.
   const [sidebarW, setSidebarW] = useState(() => {
     if (typeof window === "undefined") return DEFAULT_SIDEBAR_W;
     const saved = Number(window.localStorage.getItem("tools_sidebarW"));
     return Number.isFinite(saved) && saved > 0 ? saved : DEFAULT_SIDEBAR_W;
   });
 
+  // Persist sidebar width changes so the desktop layout keeps the user's preference.
   useEffect(() => {
     if (typeof window === "undefined") return;
     window.localStorage.setItem("tools_sidebarW", String(sidebarW));
   }, [sidebarW]);
 
+  // Shared state for the skin selection tool
   const [skinState, setSkinState] = useState({
     rows: [],
     showPatientCounts: true,
@@ -40,6 +56,7 @@ export default function ToolsLayout() {
     showDrainage: true,
   });
 
+  // Shared state for the heatmap tool
   const [heatmapState, setHeatmapState] = useState({
     region: "Right Axilla",
     pointDisplayMode: "normalised", // none or sites or normalised
@@ -48,6 +65,10 @@ export default function ToolsLayout() {
     defaultRegion: "Right Axilla",
   });
 
+  /**
+   * Static grouped heatmap region definitions used to derive user-facing labels.
+   * Memoised because the structure does not change between renders.
+   */
   const heatmapSections = useMemo(
     () => [
       {
@@ -93,6 +114,12 @@ export default function ToolsLayout() {
     []
   );
 
+  /**
+   * Converts an internal heatmap region key into the label displayed in the viewer overlay.
+   *
+   * @param {string} value Internal region identifier.
+   * @returns {string} Human-readable region label.
+   */
   const getDisplayRegionLabel = (value) => {
     for (const sec of heatmapSections) {
       for (const row of sec.rows) {
@@ -114,8 +141,13 @@ export default function ToolsLayout() {
     return value;
   };
 
+  // Human-readable label shown over the viewer for the currently selected heatmap region.
   const selectedRegionLabel = getDisplayRegionLabel(heatmapState.region);
 
+  /**
+   * Resets the shared view controls and active-tool state back to their defaults.
+   * Also forwards the reset request to the underlying 3D viewer API.
+   */
   const handleReset = () => {
     setViewPreset("All");
 
@@ -137,6 +169,11 @@ export default function ToolsLayout() {
     apiRef.current?.resetAll?.();
   };
 
+  /**
+   * Starts desktop sidebar resizing and tracks pointer movement until release.
+   *
+   * @param {PointerEvent | React.PointerEvent} e Pointer event from the resize handle.
+   */
   const startResize = (e) => {
     if (!isMdUp) return;
     if (e.button !== 0) return;
@@ -168,6 +205,10 @@ export default function ToolsLayout() {
     window.addEventListener("pointerup", onUp);
   };
 
+  /**
+   * Shared context object passed to nested tool routes through React Router's outlet.
+   * Keeps both tool pages connected to the same viewer and layout state.
+   */
   const outletContext = useMemo(
     () => ({
       activeTool,
@@ -180,6 +221,7 @@ export default function ToolsLayout() {
     [activeTool, isMdUp, skinState, heatmapState]
   );
 
+  // Render the responsive two panel layout with the shared viewer and route-specific sidebar.
   return (
     <Box
       sx={{
@@ -191,6 +233,7 @@ export default function ToolsLayout() {
         overflow: "hidden",
       }}
     >
+      {/* Desktop only sidebar column with a draggable resize handle and nested route content. */}
       {isMdUp && (
         <Box
           sx={{
@@ -206,6 +249,7 @@ export default function ToolsLayout() {
             overflow: "hidden",
           }}
         >
+          {/* Thin draggable edge used to resize the desktop sidebar width. */}
           <Box
             onPointerDown={startResize}
             role="separator"
@@ -246,6 +290,7 @@ export default function ToolsLayout() {
           minHeight: 0,
         }}
       >
+        {/* Shared Three.js viewer that stays mounted while switching between tool sidebars. */}
         <SharedBodyViewer
           activeTool={activeTool}
           viewPreset={viewPreset}
@@ -273,14 +318,17 @@ export default function ToolsLayout() {
           }}
         />
 
+        {/* Floating zoom and reset controls wired to the viewer API. */}
         <CanvasControls
           onZoomIn={() => apiRef.current?.zoomIn?.()}
           onZoomOut={() => apiRef.current?.zoomOut?.()}
           onReset={handleReset}
         />
 
+        {/* Floating view-preset selector shared by both tools. */}
         <ViewControls value={viewPreset} onChange={setViewPreset} />
 
+        {/* Desktop heatmap legend anchored in the bottom-left corner of the viewer. */}
         {activeTool === "heatmap" && isMdUp && (
           <Box
             sx={{
@@ -296,6 +344,7 @@ export default function ToolsLayout() {
           </Box>
         )}
 
+        {/* Bottom-centre overlay showing the currently selected heatmap region label. */}
         {activeTool === "heatmap" && (
           <Paper
             variant="outlined"
@@ -327,6 +376,7 @@ export default function ToolsLayout() {
           </Paper>
         )}
 
+        {/* Mobile layout overlays the nested tool UI on top of the shared viewer. */}
         {!isMdUp && (
           <Box
             sx={{
@@ -355,6 +405,11 @@ export default function ToolsLayout() {
   );
 }
 
+/**
+ * Compact legend describing the colour scale used by the heatmap viewer.
+ *
+ * @returns {JSX.Element} The rendered heatmap legend card.
+ */
 function HeatmapLegend() {
   return (
     <Paper

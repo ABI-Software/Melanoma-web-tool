@@ -19,6 +19,10 @@ import {
 
 import MenuIcon from "@mui/icons-material/Menu";
 
+/**
+ * Top level navigation items rendered in both the desktop navbar
+ * and the mobile drawer menu.
+ */
 const navItems = [
   { label: "Home", to: "/" },
   { label: "Skin Selection Tool", to: "/tool1" },
@@ -26,7 +30,15 @@ const navItems = [
   { label: "Our Team", to: "/team" },
 ];
 
-export default function Navbar({ brand }) {
+/**
+ * Responsive top navigation bar for the application.
+ * Displays inline navigation buttons on larger screens and a drawer menu on mobile.
+ *
+ * @param {Object} props Component props.
+ * @param {string} props.title Title text shown on the left side of the navbar.
+ * @returns {JSX.Element} The rendered navigation bar and mobile drawer.
+ */
+export default function Navbar({ title }) {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
   const [drawerOpen, setDrawerOpen] = useState(false);
@@ -34,6 +46,10 @@ export default function Navbar({ brand }) {
   const location = useLocation();
   const activePath = location.pathname;
 
+  /**
+   * Resolves which top level navigation item should be treated as active.
+   * Falls back to prefix matching so nested routes still highlight their parent section.
+   */
   const activeIndex = useMemo(() => {
     const idx = navItems.findIndex((x) => x.to === activePath);
     if (idx >= 0) return idx;
@@ -43,6 +59,12 @@ export default function Navbar({ brand }) {
     return prefixIdx >= 0 ? prefixIdx : 0;
   }, [activePath]);
 
+  /**
+   * Returns the shared button styling for desktop navigation links.
+   *
+   * @param {boolean} isActive Whether the link represents the current route.
+   * @returns {Object} MUI sx style object for the link button.
+   */
   const linkSx = (isActive) => ({
     textTransform: "none",
     fontWeight: 600,
@@ -60,7 +82,8 @@ export default function Navbar({ brand }) {
         position="sticky"
         elevation={0}
         sx={{
-          bgcolor: "rgba(16, 24, 38, 0.75)", // translucent dark surface
+          // Use a translucent surface so page content can subtly show through.
+          bgcolor: "rgba(16, 24, 38, 0.75)",
           backdropFilter: "blur(10px)",
           borderBottom: "1px solid",
           borderColor: "divider",
@@ -79,11 +102,12 @@ export default function Navbar({ brand }) {
               whiteSpace: "nowrap",
             }}
           >
-            {brand}
+            {title}
           </Typography>
 
           <Box sx={{ flexGrow: 1 }} />
 
+          {/* Show a compact drawer trigger on small screens, otherwise render inline nav links. */}
           {isMobile ? (
             <IconButton
               aria-label="Open navigation menu"
@@ -130,11 +154,12 @@ export default function Navbar({ brand }) {
       >
         <Box sx={{ p: 2 }}>
           <Typography variant="subtitle1" sx={{ fontWeight: 800 }}>
-            {brand}
+            {title}
           </Typography>
         </Box>
         <Divider />
         <List sx={{ py: 0 }}>
+          {/* Reuse the same route list in the mobile drawer with active state highlighting. */}
           {navItems.map((item) => {
             const isActive =
               item.to === "/"
